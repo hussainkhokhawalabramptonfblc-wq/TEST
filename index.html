@@ -409,19 +409,29 @@ select option{background:var(--forest);color:var(--cream);}
 @keyframes fi{from{opacity:0}to{opacity:1}}
 
 /* SCROLL ANIMATIONS */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease;}
-.reveal.visible{opacity:1;transform:translateY(0);}
-.reveal-delay-1{transition-delay:.1s}
-.reveal-delay-2{transition-delay:.2s}
-.reveal-delay-3{transition-delay:.3s}
-.reveal-delay-4{transition-delay:.4s}
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .7s ease, transform .7s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: .1s; }
+.reveal-delay-2 { transition-delay: .2s; }
+.reveal-delay-3 { transition-delay: .3s; }
+.reveal-delay-4 { transition-delay: .4s; }
 </style>
 </head>
-<body>
-<div id="cu"></div>
-<div id="cr"></div>
-<canvas id="nc"></canvas>
 
+<body>
+  <div id="cu"></div>
+  <div id="cr"></div>
+  <canvas id="nc"></canvas>
+  
 <!-- NAV -->
 <nav id="mainnav">
   <div class="nav-inner">
