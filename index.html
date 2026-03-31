@@ -1129,11 +1129,6 @@ function cam() { if (cMc >= cMx) return; cMc++; document.getElementById('cmcw').
 function crm(i) { const el = document.getElementById('cmc' + i); if (el) { el.remove(); cMc--; cra(); } }
 function cra() { document.getElementById('caddb').disabled = cMc >= cMx; }
 
-function cGoTo(s) { /* ... same as original ... */ }
-function cPs(s) { /* ... same as original ... */ }
-function cNs(s) { if (!cVal(s)) return; const nx = s + 1; if (nx > 5) return; /* ... update steps ... */ }
-function cVal(s) { /* ... validation unchanged ... */ }
-
 function cSub() {
   const ids = ['ca1','ca2','ca3','ca4','ca5','ca6'];
   const all = ids.every(id => document.getElementById(id).checked);
@@ -1207,11 +1202,6 @@ function cSub() {
 // ========== JUDGE FORM ==========
 let jCur = 1;
 
-function jGoTo(s) { /* ... same as original ... */ }
-function jPs(s) { /* ... same as original ... */ }
-function jNs(s) { if (!jVal(s)) return; const nx = s + 1; if (nx > 4) return; /* ... update steps ... */ }
-function jVal(s) { /* ... validation unchanged ... */ }
-
 function jSub() {
   const ids = ['ja1','ja2','ja3','ja4','ja5'];
   const all = ids.every(id => document.getElementById(id).checked);
@@ -1267,10 +1257,403 @@ function jSub() {
   });
 }
 
-// ========== INITIALIZATION (keep existing) ==========
+// ========== TAB SWITCHING ==========
+function openTab(tab) {
+  const compTab = document.getElementById('tab-competitor');
+  const judgeTab = document.getElementById('tab-judge');
+  const compPanel = document.getElementById('panel-competitor');
+  const judgePanel = document.getElementById('panel-judge');
+
+  if (tab === 'competitor') {
+    compTab.classList.add('active');
+    judgeTab.classList.remove('active');
+    compPanel.classList.add('active');
+    judgePanel.classList.remove('active');
+  } else if (tab === 'judge') {
+    judgeTab.classList.add('active');
+    compTab.classList.remove('active');
+    judgePanel.classList.add('active');
+    compPanel.classList.remove('active');
+  }
+}
+
+// ========== MOBILE MENU ==========
+function toggleMob() {
+  const menu = document.getElementById('mobMenu');
+  menu.classList.toggle('open');
+}
+
+function closeMob() {
+  const menu = document.getElementById('mobMenu');
+  menu.classList.remove('open');
+}
+
+// ========== CHARACTER COUNTER ==========
+function uc(inputId, counterId, max) {
+  const input = document.getElementById(inputId);
+  const counter = document.getElementById(counterId);
+  if (input && counter) {
+    const len = input.value.length;
+    counter.textContent = len + ' / ' + max;
+  }
+}
+
+// ========== COMPETITOR FORM NAVIGATION ==========
+function cGoTo(s) {
+  if (s < 1 || s > 5) return;
+  for (let i = 1; i <= 5; i++) {
+    const sec = document.getElementById('cs' + i);
+    const tab = document.getElementById('ct' + i);
+    if (i === s) {
+      sec.classList.add('active');
+      tab.classList.add('active');
+    } else {
+      sec.classList.remove('active');
+      tab.classList.remove('active');
+    }
+    if (i < s) {
+      tab.classList.add('done');
+    } else {
+      tab.classList.remove('done');
+    }
+  }
+  cCur = s;
+}
+
+function cPs(s) {
+  if (s <= 1) return;
+  cGoTo(s - 1);
+}
+
+function cNs(s) {
+  if (!cVal(s)) return;
+  const nx = s + 1;
+  if (nx > 5) return;
+  cGoTo(nx);
+}
+
+function cVal(s) {
+  const errors = [];
+
+  if (s === 1) {
+    const tname = document.getElementById('c-tname').value.trim();
+    const tsize = document.getElementById('c-tsize').value;
+    const pcon = document.getElementById('c-pcon').value.trim();
+    const pem = document.getElementById('c-pem').value.trim();
+
+    if (!tname) errors.push({ id: 'ce-tname', input: 'c-tname' });
+    if (!tsize) errors.push({ id: 'ce-tsize', input: 'c-tsize' });
+    if (!pcon) errors.push({ id: 'ce-pcon', input: 'c-pcon' });
+    if (!pem || !pem.includes('@')) errors.push({ id: 'ce-pem', input: 'c-pem' });
+  }
+
+  if (s === 2) {
+    for (let i = 1; i <= cMc; i++) {
+      const f = document.getElementById('cmf' + i);
+      const l = document.getElementById('cml' + i);
+      const e = document.getElementById('cme' + i);
+      const g = document.getElementById('cmg' + i);
+      if (!f || !f.value.trim() || !l || !l.value.trim() || !e || !e.value.trim() || !g || !g.value) {
+        alert('Please fill all required fields for all team members.');
+        return false;
+      }
+    }
+  }
+
+  if (s === 3) {
+    const sn = document.getElementById('c-sn').value.trim();
+    const sc = document.getElementById('c-sc').value.trim();
+    const prov = document.querySelector('input[name="cprov"]:checked');
+
+    if (!sn) errors.push({ id: 'ce-sn', input: 'c-sn' });
+    if (!sc) errors.push({ id: 'ce-sc', input: 'c-sc' });
+    if (!prov) errors.push({ id: 'ce-prov' });
+  }
+
+  if (s === 4) {
+    const vn = document.getElementById('c-vn').value.trim();
+    const vd = document.getElementById('c-vd').value.trim();
+    const sec = document.querySelector('input[name="csec"]:checked');
+    const ait = document.querySelector('input[name="cait"]:checked');
+    const os = document.getElementById('c-os').value;
+
+    if (!vn) errors.push({ id: 'ce-vn', input: 'c-vn' });
+    if (!vd) errors.push({ id: 'ce-vd', input: 'c-vd' });
+    if (!sec) errors.push({ id: 'ce-sec' });
+    if (!ait) errors.push({ id: 'ce-ait' });
+    if (!os) errors.push({ id: 'ce-os', input: 'c-os' });
+  }
+
+  document.querySelectorAll('.fe').forEach(el => el.classList.remove('show'));
+  document.querySelectorAll('input, select, textarea').forEach(el => el.classList.remove('er'));
+
+  errors.forEach(err => {
+    const errEl = document.getElementById(err.id);
+    if (errEl) errEl.classList.add('show');
+    if (err.input) {
+      const inputEl = document.getElementById(err.input);
+      if (inputEl) inputEl.classList.add('er');
+    }
+  });
+
+  return errors.length === 0;
+}
+
+// ========== JUDGE FORM NAVIGATION ==========
+function jGoTo(s) {
+  if (s < 1 || s > 4) return;
+  for (let i = 1; i <= 4; i++) {
+    const sec = document.getElementById('js' + i);
+    const tab = document.getElementById('jt' + i);
+    if (i === s) {
+      sec.classList.add('active');
+      tab.classList.add('active');
+    } else {
+      sec.classList.remove('active');
+      tab.classList.remove('active');
+    }
+    if (i < s) {
+      tab.classList.add('done');
+    } else {
+      tab.classList.remove('done');
+    }
+  }
+  jCur = s;
+}
+
+function jPs(s) {
+  if (s <= 1) return;
+  jGoTo(s - 1);
+}
+
+function jNs(s) {
+  if (!jVal(s)) return;
+  const nx = s + 1;
+  if (nx > 4) return;
+  jGoTo(nx);
+}
+
+function jVal(s) {
+  const errors = [];
+
+  if (s === 1) {
+    const fn = document.getElementById('j-fn').value.trim();
+    const ln = document.getElementById('j-ln').value.trim();
+    const em = document.getElementById('j-em').value.trim();
+    const loc = document.getElementById('j-loc').value.trim();
+    const org = document.getElementById('j-org').value.trim();
+    const title = document.getElementById('j-title').value.trim();
+
+    if (!fn) errors.push({ id: 'je-fn', input: 'j-fn' });
+    if (!ln) errors.push({ id: 'je-ln', input: 'j-ln' });
+    if (!em || !em.includes('@')) errors.push({ id: 'je-em', input: 'j-em' });
+    if (!loc) errors.push({ id: 'je-loc', input: 'j-loc' });
+    if (!org) errors.push({ id: 'je-org', input: 'j-org' });
+    if (!title) errors.push({ id: 'je-title', input: 'j-title' });
+  }
+
+  if (s === 2) {
+    const sec = document.querySelector('input[name="jsec"]:checked');
+    const cred = document.querySelector('input[name="jcred"]:checked');
+    const bio = document.getElementById('j-bio').value.trim();
+
+    if (!sec) errors.push({ id: 'je-sec' });
+    if (!cred) errors.push({ id: 'je-cred' });
+    if (!bio) errors.push({ id: 'je-bio', input: 'j-bio' });
+  }
+
+  if (s === 3) {
+    const avail = document.querySelector('input[name="javail"]:checked');
+    const brief = document.querySelector('input[name="jbrief"]:checked');
+    const zoom = document.querySelector('input[name="jzoom"]:checked');
+
+    if (!avail) errors.push({ id: 'je-avail' });
+    if (!brief) errors.push({ id: 'je-brief' });
+    if (!zoom) errors.push({ id: 'je-zoom' });
+  }
+
+  document.querySelectorAll('.fe').forEach(el => el.classList.remove('show'));
+  document.querySelectorAll('input, select, textarea').forEach(el => el.classList.remove('er'));
+
+  errors.forEach(err => {
+    const errEl = document.getElementById(err.id);
+    if (errEl) errEl.classList.add('show');
+    if (err.input) {
+      const inputEl = document.getElementById(err.input);
+      if (inputEl) inputEl.classList.add('er');
+    }
+  });
+
+  return errors.length === 0;
+}
+
+// ========== SCROLL REVEAL ANIMATIONS ==========
+function revealOnScroll() {
+  const reveals = document.querySelectorAll('.reveal');
+  reveals.forEach(el => {
+    const rect = el.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    if (rect.top < windowHeight - 100) {
+      el.classList.add('visible');
+    }
+  });
+}
+
+// ========== TYPEWRITER EFFECT ==========
+function typeWriter() {
+  const text = "Intelligence, Redefined.";
+  const target = document.getElementById('tw');
+  const cursor = document.getElementById('twc');
+  let i = 0;
+
+  function type() {
+    if (i < text.length) {
+      target.textContent += text.charAt(i);
+      i++;
+      setTimeout(type, 80);
+    } else {
+      cursor.style.animation = 'blink .8s step-end infinite';
+    }
+  }
+
+  setTimeout(type, 1500);
+}
+
+// ========== CANVAS NETWORK ANIMATION ==========
+function initCanvas() {
+  const canvas = document.getElementById('nc');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = [];
+  const particleCount = 50;
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.vx = (Math.random() - 0.5) * 0.5;
+      this.vy = (Math.random() - 0.5) * 0.5;
+      this.radius = 1.5;
+    }
+
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+
+      if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+      if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+    }
+
+    draw() {
+      ctx.fillStyle = 'rgba(201, 168, 76, 0.4)';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle());
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 120) {
+          ctx.strokeStyle = `rgba(201, 168, 76, ${0.15 * (1 - dist / 120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+}
+
+// ========== CURSOR ANIMATION ==========
+function initCursor() {
+  const cursor = document.getElementById('cu');
+  const cursorRing = document.getElementById('cr');
+
+  if (!cursor || !cursorRing) return;
+
+  let mouseX = 0, mouseY = 0;
+  let cursorX = 0, cursorY = 0;
+  let ringX = 0, ringY = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  function animate() {
+    cursorX += (mouseX - cursorX) * 0.9;
+    cursorY += (mouseY - cursorY) * 0.9;
+    ringX += (mouseX - ringX) * 0.15;
+    ringY += (mouseY - ringY) * 0.15;
+
+    cursor.style.left = cursorX + 'px';
+    cursor.style.top = cursorY + 'px';
+    cursorRing.style.left = ringX + 'px';
+    cursorRing.style.top = ringY + 'px';
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  document.querySelectorAll('a, button, input, select, textarea, .stab').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursorRing.style.transform = 'translate(-50%, -50%) scale(1.5)';
+      cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursorRing.style.transform = 'translate(-50%, -50%) scale(1)';
+      cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+    });
+  });
+}
+
+// ========== INITIALIZATION ==========
 window.addEventListener('DOMContentLoaded', () => {
-  const c = document.getElementById('cmcw'); c.innerHTML = bmc(1, true); cMc = 1; cMx = 1; cra();
-  // ... other initializations if any ...
+  const c = document.getElementById('cmcw');
+  c.innerHTML = bmc(1, true);
+  cMc = 1;
+  cMx = 1;
+  cra();
+
+  initCursor();
+  initCanvas();
+  typeWriter();
+  revealOnScroll();
+
+  window.addEventListener('scroll', revealOnScroll);
 });
 </script>
 </body>
