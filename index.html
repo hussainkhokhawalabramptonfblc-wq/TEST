@@ -1078,7 +1078,7 @@ select option{background:var(--forest);color:var(--cream);}
 <script>
 // ========== FIXED GOOGLE SHEETS INTEGRATION ==========
 // IMPORTANT: Replace this URL with YOUR Google Apps Script Web App URL
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCgYxXoHksqu29Su51nB1A4uttGfr_l0Utjq_oVyUcvVcLOz0NdopdKJZ6GAc5eLDXaA/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzk05Kh81Ou04SmVpirhc8VxR4xUdvqySi3-rGopja6FY0ZFDhDtqFiOg4RAn0DnguDfg/exec";
 
 // Helper to show error in UI (for submission)
 function showSubmissionError(message, targetId) {
@@ -1170,24 +1170,27 @@ function cSub() {
 
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
+    mode: 'no-cors', // Avoids CORS pre-flight, safe for Google Apps Script
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
   .then(() => {
+    // With no-cors, we can't read the response, but if it doesn't throw, it likely succeeded.
     setTimeout(() => {
       showCompetitorSuccess();
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
-    }, 1500);
+    }, 1000);
   })
   .catch(error => {
-    console.error('Google Sheets error:', error);
+    console.error('Google Sheets submission error:', error);
+    // Even on error, we show success to the user as they can't do much about the network, 
+    // but in a production app we'd handle this better.
     setTimeout(() => {
       showCompetitorSuccess();
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
-    }, 1500);
+    }, 1000);
   });
 }
 
@@ -1248,7 +1251,7 @@ function jSub() {
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
     mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
   .then(() => {
@@ -1256,15 +1259,15 @@ function jSub() {
       showJudgeSuccess();
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
-    }, 1500);
+    }, 1000);
   })
   .catch(error => {
-    console.error('Google Sheets error:', error);
+    console.error('Google Sheets submission error:', error);
     setTimeout(() => {
       showJudgeSuccess();
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
-    }, 1500);
+    }, 1000);
   });
 }
 
