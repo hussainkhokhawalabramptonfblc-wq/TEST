@@ -1112,7 +1112,6 @@ function bmc(i, first) {
   </div></div></div>`;
 }
 
-function cumc(v) { cMx = parseInt(v) || 1; const c = document.getElementById('cmcw'); c.innerHTML = ''; cMc = 0; for (let i = 1; i <= cMx; i++) { c.insertAdjacentHTML('beforeend', bmc(i, i === 1)); cMc++; } cra(); }
 function cam() { if (cMc >= cMx) return; cMc++; document.getElementById('cmcw').insertAdjacentHTML('beforeend', bmc(cMc, false)); cra(); }
 function crm(i) { const el = document.getElementById('cmc' + i); if (el) { el.remove(); cMc--; cra(); } }
 function cra() { document.getElementById('caddb').disabled = cMc >= cMx; }
