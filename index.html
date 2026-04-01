@@ -812,7 +812,7 @@ select option{background:var(--forest);color:var(--cream);}
           <div class="shdr"><div class="sno">03 / 05 — School &amp; Club</div><h2 class="stitle-f">Your <span class="ac">school</span> &amp; club</h2><p class="sdesc-f">Helps us track national reach and coordinate with your club's administration.</p></div>
           <div class="sdiv"></div>
           <div class="fg">
-            <div class="fi ff"><label class="fl" for="c-sn">School Name <span class="req">*</span></label><input type="text" id="c-sn" placeholder="Full official school name"/><div class="fe" id="ce-sn">Please enter your club name.</div></div>
+            <div class="fi ff"><label class="fl" for="c-sn">School Name <span class="req">*</span></label><input type="text" id="c-sn" placeholder="Full official school name"/><div class="fe" id="ce-sn">Please enter your school name.</div></div>
             <div class="fi"><label class="fl" for="c-sc">City <span class="req">*</span></label><input type="text" id="c-sc" placeholder="e.g. Toronto"/><div class="fe" id="ce-sc">Please enter your city.</div></div>
             <div class="fi"><label class="fl" for="c-sb">School Board <span class="opt">(optional)</span></label><input type="text" id="c-sb" placeholder="e.g. PDSB, TDSB"/></div>
             <div class="fi ff"><label class="fl">Province / Territory <span class="req">*</span></label>
@@ -834,7 +834,7 @@ select option{background:var(--forest);color:var(--cream);}
               <div class="fe" id="ce-prov">Please select your province.</div>
             </div>
             <div class="fi ff"><label class="fl" for="c-ta">Club Name <span class="opt">(optional)</span></label><input type="text" id="c-ta" placeholder="Name and subject area"/></div>
-            <div class="fi"><label class="fl" for="c-ae">Presidents Email <span class="opt">(optional)</span></label><input type="email" id="c-ae" placeholder="advisor@school.ca"/></div>
+            <div class="fi"><label class="fl" for="c-ae">Advisor Email <span class="opt">(optional)</span></label><input type="email" id="c-ae" placeholder="advisor@school.ca"/></div>
           </div>
           <div class="nr"><button class="btn bgh" onclick="cPs(3)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 8H3M7 4L3 8l4 4"/></svg><span>Back</span></button><button class="btn bnx" onclick="cNs(3)"><span>Venture</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></div>
         </div>
@@ -1160,6 +1160,12 @@ function cSub() {
     }
   }
 
+  // Disable submit button and show loading state
+  const submitBtn = document.querySelector('#panel-competitor .bsb');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span>Submitting...</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>';
+
   // Submit to Google Sheets
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
@@ -1183,6 +1189,8 @@ function cSub() {
   })
   .catch(error => {
     showSubmissionError('Submission failed: ' + error.message, 'c-seb');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   });
 }
 
@@ -1218,6 +1226,12 @@ function jSub() {
     notes: document.getElementById('j-notes').value.trim()
   };
 
+  // Disable submit button and show loading state
+  const submitBtn = document.querySelector('#panel-judge .bsb');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span>Submitting...</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>';
+
   // Submit to Google Sheets
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
@@ -1241,6 +1255,8 @@ function jSub() {
   })
   .catch(error => {
     showSubmissionError('Submission failed: ' + error.message, 'j-seb');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   });
 }
 
