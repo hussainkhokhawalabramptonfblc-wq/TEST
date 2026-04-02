@@ -425,7 +425,7 @@ select option{background:var(--forest);color:var(--cream);}
 .reveal-delay-3 { transition-delay: .3s; }
 .reveal-delay-4 { transition-delay: .4s; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
 </head>
 
 <body>
@@ -1077,15 +1077,26 @@ select option{background:var(--forest);color:var(--cream);}
 </style>
 
 <script>
-// ========== SUPABASE DATABASE INTEGRATION ==========
+// ========== SUPABASE DATABASE (DIRECT REST API) ==========
 const SUPABASE_URL = 'https://yldttgzmdomfgrhdqxyr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZHR0Z3ptZG9tZmdyaGRxeHlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQ2MzIsImV4cCI6MjA5MDcyMDYzMn0.NCYPUpVM8U32esY1US3wHIeSAWZ3KLtrMXEkHeRrKEk';
-let _supabaseClient = null;
-function getSupabase() {
-  if (!_supabaseClient) {
-    _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function insertRow(table, rowData) {
+  const response = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(rowData)
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText || 'HTTP ' + response.status);
   }
-  return _supabaseClient;
+  return true;
 }
 
 // ========== COMPETITOR FORM ==========
@@ -1177,8 +1188,7 @@ async function cSub() {
   submitBtn.innerHTML = '<span>Sending registration...</span>';
 
   try {
-    const { data, error } = await getSupabase().from('competitors').insert([rowData]);
-    if (error) throw error;
+    await insertRow('competitors', rowData);
     showCompetitorSuccess();
   } catch (error) {
     console.error('Supabase submission error:', error);
@@ -1244,8 +1254,7 @@ async function jSub() {
   submitBtn.innerHTML = '<span>Sending application...</span>';
 
   try {
-    const { data, error } = await getSupabase().from('judges').insert([rowData]);
-    if (error) throw error;
+    await insertRow('judges', rowData);
     showJudgeSuccess();
   } catch (error) {
     console.error('Supabase submission error:', error);
