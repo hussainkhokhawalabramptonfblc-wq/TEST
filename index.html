@@ -425,7 +425,7 @@ select option{background:var(--forest);color:var(--cream);}
 .reveal-delay-3 { transition-delay: .3s; }
 .reveal-delay-4 { transition-delay: .4s; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
 
 <body>
@@ -1080,7 +1080,13 @@ select option{background:var(--forest);color:var(--cream);}
 // ========== SUPABASE DATABASE INTEGRATION ==========
 const SUPABASE_URL = 'https://yldttgzmdomfgrhdqxyr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZHR0Z3ptZG9tZmdyaGRxeHlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQ2MzIsImV4cCI6MjA5MDcyMDYzMn0.NCYPUpVM8U32esY1US3wHIeSAWZ3KLtrMXEkHeRrKEk';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let _supabaseClient = null;
+function getSupabase() {
+  if (!_supabaseClient) {
+    _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return _supabaseClient;
+}
 
 // ========== COMPETITOR FORM ==========
 let cCur = 1, cMc = 0, cMx = 1;
@@ -1171,7 +1177,7 @@ async function cSub() {
   submitBtn.innerHTML = '<span>Sending registration...</span>';
 
   try {
-    const { data, error } = await supabase.from('competitors').insert([rowData]);
+    const { data, error } = await getSupabase().from('competitors').insert([rowData]);
     if (error) throw error;
     showCompetitorSuccess();
   } catch (error) {
@@ -1238,7 +1244,7 @@ async function jSub() {
   submitBtn.innerHTML = '<span>Sending application...</span>';
 
   try {
-    const { data, error } = await supabase.from('judges').insert([rowData]);
+    const { data, error } = await getSupabase().from('judges').insert([rowData]);
     if (error) throw error;
     showJudgeSuccess();
   } catch (error) {
