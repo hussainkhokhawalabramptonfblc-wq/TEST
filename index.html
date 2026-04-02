@@ -1078,7 +1078,7 @@ select option{background:var(--forest);color:var(--cream);}
 <script>
 // ========== FIXED GOOGLE SHEETS INTEGRATION ==========
 // IMPORTANT: Replace this URL with YOUR Google Apps Script Web App URL
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzk05Kh81Ou04SmVpirhc8VxR4xUdvqySi3-rGopja6FY0ZFDhDtqFiOg4RAn0DnguDfg/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvCYdEx0x-6ZNDeaiNQmgyWjDJGySkDLwussUr4GRhlRCQtxvmeTBpj8NRARTIH63-Yg/exec";
 
 // Helper to show error in UI (for submission)
 function showSubmissionError(message, targetId) {
@@ -1170,27 +1170,25 @@ function cSub() {
 
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    mode: 'no-cors', // Avoids CORS pre-flight, safe for Google Apps Script
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(data)
   })
-  .then(() => {
-    // With no-cors, we can't read the response, but if it doesn't throw, it likely succeeded.
-    setTimeout(() => {
+  .then(res => res.json())
+  .then(res => {
+    if (res.result === 'success') {
       showCompetitorSuccess();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
-    }, 1000);
+    } else {
+      throw new Error(res.error || 'Server error');
+    }
   })
   .catch(error => {
     console.error('Google Sheets submission error:', error);
-    // Even on error, we show success to the user as they can't do much about the network, 
-    // but in a production app we'd handle this better.
-    setTimeout(() => {
-      showCompetitorSuccess();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
-    }, 1000);
+    // Show detailed error message
+    showSubmissionError("Network error: " + error.message + ". Please ensure your Apps Script URL is correct and deployed as 'Anyone'.", 'c-seb');
+  })
+  .finally(() => {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   });
 }
 
@@ -1250,24 +1248,24 @@ function jSub() {
 
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(data)
   })
-  .then(() => {
-    setTimeout(() => {
+  .then(res => res.json())
+  .then(res => {
+    if (res.result === 'success') {
       showJudgeSuccess();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
-    }, 1000);
+    } else {
+      throw new Error(res.error || 'Server error');
+    }
   })
   .catch(error => {
     console.error('Google Sheets submission error:', error);
-    setTimeout(() => {
-      showJudgeSuccess();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
-    }, 1000);
+    showSubmissionError("Network error: " + error.message + ". Check your connection or Apps Script setup.", 'j-seb');
+  })
+  .finally(() => {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   });
 }
 
