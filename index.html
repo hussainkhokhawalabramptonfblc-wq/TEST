@@ -425,7 +425,6 @@ select option{background:var(--forest);color:var(--cream);}
 .reveal-delay-3 { transition-delay: .3s; }
 .reveal-delay-4 { transition-delay: .4s; }
 </style>
-
 </head>
 
 <body>
@@ -1077,27 +1076,8 @@ select option{background:var(--forest);color:var(--cream);}
 </style>
 
 <script>
-// ========== SUPABASE DATABASE (DIRECT REST API) ==========
-const SUPABASE_URL = 'https://yldttgzmdomfgrhdqxyr.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZHR0Z3ptZG9tZmdyaGRxeHlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDQ2MzIsImV4cCI6MjA5MDcyMDYzMn0.NCYPUpVM8U32esY1US3wHIeSAWZ3KLtrMXEkHeRrKEk';
-
-async function insertRow(table, rowData) {
-  const response = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify(rowData)
-  });
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(errText || 'HTTP ' + response.status);
-  }
-  return true;
-}
+// ========== FORMSPREE INTEGRATION ==========
+const FORMSPREE_URL = "https://formspree.io/f/maqldwqo";
 
 // ========== COMPETITOR FORM ==========
 let cCur = 1, cMc = 0, cMx = 1;
@@ -1135,7 +1115,7 @@ function cam() { if (cMc >= cMx) return; cMc++; document.getElementById('cmcw').
 function crm(i) { const el = document.getElementById('cmc' + i); if (el) { el.remove(); cMc--; cra(); } }
 function cra() { document.getElementById('caddb').disabled = cMc >= cMx; }
 
-async function cSub() {
+function cSub() {
   const ids = ['ca1','ca2','ca3','ca4','ca5','ca6'];
   const all = ids.every(id => document.getElementById(id).checked);
   const eb = document.getElementById('c-seb');
@@ -1161,43 +1141,61 @@ async function cSub() {
     }
   }
 
-  // Supabase insert — column names match our database table
-  const rowData = {
-    team_name: document.getElementById('c-tname').value.trim(),
-    team_size: parseInt(document.getElementById('c-tsize').value) || 1,
-    primary_contact: document.getElementById('c-pcon').value.trim(),
-    email: document.getElementById('c-pem').value.trim(),
-    phone: document.getElementById('c-ph').value.trim(),
-    how_heard: document.getElementById('c-ha').value,
-    school_name: document.getElementById('c-sn').value.trim(),
-    city: document.getElementById('c-sc').value.trim(),
-    school_board: document.getElementById('c-sb').value.trim(),
-    province: document.querySelector('input[name="cprov"]:checked')?.value || '',
-    club_name: document.getElementById('c-ta').value.trim(),
-    advisor_email: document.getElementById('c-ae').value.trim(),
-    venture_name: document.getElementById('c-vn').value.trim(),
-    tagline: document.getElementById('c-vtl').value.trim(),
-    venture_description: document.getElementById('c-vd').value.trim(),
-    industry_sector: document.querySelector('input[name="csec"]:checked')?.nextElementSibling?.querySelector('.snm')?.textContent || '',
-    ai_integration: document.querySelector('input[name="cait"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
-    operating_status: document.getElementById('c-os').value,
-    team_members: membersStr,
-    additional_notes: document.getElementById('c-an').value.trim()
+  // Formspree needs flat key-value pairs (no nested objects)
+  const formData = {
+    _subject: 'New Competitor Registration — Founder\'s Den 2026',
+    'Registration Type': 'COMPETITOR',
+    'Team Name': document.getElementById('c-tname').value.trim(),
+    'Team Size': document.getElementById('c-tsize').value,
+    'Primary Contact': document.getElementById('c-pcon').value.trim(),
+    'Email': document.getElementById('c-pem').value.trim(),
+    _replyto: document.getElementById('c-pem').value.trim(),
+    'Phone': document.getElementById('c-ph').value.trim(),
+    'How Did You Hear': document.getElementById('c-ha').value,
+    'School Name': document.getElementById('c-sn').value.trim(),
+    'City': document.getElementById('c-sc').value.trim(),
+    'School Board': document.getElementById('c-sb').value.trim(),
+    'Province': document.querySelector('input[name="cprov"]:checked')?.value || '',
+    'Club Name': document.getElementById('c-ta').value.trim(),
+    'Advisor Email': document.getElementById('c-ae').value.trim(),
+    'Venture Name': document.getElementById('c-vn').value.trim(),
+    'Tagline': document.getElementById('c-vtl').value.trim(),
+    'Venture Description': document.getElementById('c-vd').value.trim(),
+    'Industry Sector': document.querySelector('input[name="csec"]:checked')?.nextElementSibling?.querySelector('.snm')?.textContent || '',
+    'AI Integration': document.querySelector('input[name="cait"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Operating Status': document.getElementById('c-os').value,
+    'Team Members': membersStr,
+    'Additional Notes': document.getElementById('c-an').value.trim()
   };
 
   submitBtn.innerHTML = '<span>Sending registration...</span>';
 
-  try {
-    await insertRow('competitors', rowData);
+  fetch(FORMSPREE_URL, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    }
+    return response.json().then(data => { throw new Error(data.errors?.map(e => e.message).join(', ') || 'Submission failed'); });
+  })
+  .then(data => {
     showCompetitorSuccess();
-  } catch (error) {
-    console.error('Supabase submission error:', error);
-    eb.textContent = 'Submission failed: ' + (error.message || 'Unknown error') + '. Please try again.';
+  })
+  .catch(error => {
+    console.error('Formspree submission error:', error);
+    eb.textContent = 'Submission failed: ' + error.message + '. Please try again.';
     eb.classList.add('show');
-  } finally {
+  })
+  .finally(() => {
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;
-  }
+  });
 }
 
 function showCompetitorSuccess() {
@@ -1218,7 +1216,7 @@ function showCompetitorSuccess() {
 // ========== JUDGE FORM ==========
 let jCur = 1;
 
-async function jSub() {
+function jSub() {
   const ids = ['ja1','ja2','ja3','ja4','ja5'];
   const all = ids.every(id => document.getElementById(id).checked);
   const eb = document.getElementById('j-seb');
@@ -1230,40 +1228,57 @@ async function jSub() {
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<span>Submitting...</span>';
 
-  // Supabase insert — column names match our database table
-  const rowData = {
-    first_name: document.getElementById('j-fn').value.trim(),
-    last_name: document.getElementById('j-ln').value.trim(),
-    email: document.getElementById('j-em').value.trim(),
-    phone: document.getElementById('j-ph').value.trim(),
-    location: document.getElementById('j-loc').value.trim(),
-    organization: document.getElementById('j-org').value.trim(),
-    professional_title: document.getElementById('j-title').value.trim(),
-    linkedin: document.getElementById('j-linkedin').value.trim(),
-    industry_sector: document.querySelector('input[name="jsec"]:checked')?.nextElementSibling?.querySelector('.snm')?.textContent || '',
-    credential_type: document.querySelector('input[name="jcred"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
-    bio: document.getElementById('j-bio').value.trim(),
-    previous_experience: document.getElementById('j-prev').value.trim(),
-    event_availability: document.querySelector('input[name="javail"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
-    briefing_availability: document.querySelector('input[name="jbrief"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
-    panel_preference: document.querySelector('input[name="jpref"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
-    zoom_access: document.querySelector('input[name="jzoom"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
-    notes: document.getElementById('j-notes').value.trim()
+  const formData = {
+    _subject: 'New Judge Application — Founder\'s Den 2026',
+    'Registration Type': 'JUDGE',
+    'First Name': document.getElementById('j-fn').value.trim(),
+    'Last Name': document.getElementById('j-ln').value.trim(),
+    'Email': document.getElementById('j-em').value.trim(),
+    _replyto: document.getElementById('j-em').value.trim(),
+    'Phone': document.getElementById('j-ph').value.trim(),
+    'Location': document.getElementById('j-loc').value.trim(),
+    'Organization': document.getElementById('j-org').value.trim(),
+    'Professional Title': document.getElementById('j-title').value.trim(),
+    'LinkedIn': document.getElementById('j-linkedin').value.trim(),
+    'Industry Sector': document.querySelector('input[name="jsec"]:checked')?.nextElementSibling?.querySelector('.snm')?.textContent || '',
+    'Credential Type': document.querySelector('input[name="jcred"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Bio': document.getElementById('j-bio').value.trim(),
+    'Previous Experience': document.getElementById('j-prev').value.trim(),
+    'Event Availability': document.querySelector('input[name="javail"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Briefing Availability': document.querySelector('input[name="jbrief"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Panel Preference': document.querySelector('input[name="jpref"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Zoom Access': document.querySelector('input[name="jzoom"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Notes': document.getElementById('j-notes').value.trim()
   };
 
   submitBtn.innerHTML = '<span>Sending application...</span>';
 
-  try {
-    await insertRow('judges', rowData);
+  fetch(FORMSPREE_URL, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    }
+    return response.json().then(data => { throw new Error(data.errors?.map(e => e.message).join(', ') || 'Submission failed'); });
+  })
+  .then(data => {
     showJudgeSuccess();
-  } catch (error) {
-    console.error('Supabase submission error:', error);
-    eb.textContent = 'Submission failed: ' + (error.message || 'Unknown error') + '. Please try again.';
+  })
+  .catch(error => {
+    console.error('Formspree submission error:', error);
+    eb.textContent = 'Submission failed: ' + error.message + '. Please try again.';
     eb.classList.add('show');
-  } finally {
+  })
+  .finally(() => {
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;
-  }
+  });
 }
 
 function showJudgeSuccess() {
