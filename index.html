@@ -1076,26 +1076,8 @@ select option{background:var(--forest);color:var(--cream);}
 </style>
 
 <script>
-// ========== FIXED GOOGLE SHEETS INTEGRATION ==========
-// IMPORTANT: Replace this URL with YOUR Google Apps Script Web App URL
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0h5HMQFdrOOsBztnzK-0MAZ9hCnPOWLX49V3Fge3uybB8df6e343-0P7WJp2kO3cn/exec";
-
-// Helper to show error in UI (for submission)
-function showSubmissionError(message, targetId) {
-  const el = document.getElementById(targetId);
-  if (el) {
-    el.textContent = message;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 8000);
-  }
-  console.error(message);
-}
-
-// Helper to hide error
-function hideSubmissionError(targetId) {
-  const el = document.getElementById(targetId);
-  if (el) el.classList.remove('show');
-}
+// ========== FORMSPREE INTEGRATION ==========
+const FORMSPREE_URL = "https://formspree.io/f/maqldwqo";
 
 // ========== COMPETITOR FORM ==========
 let cCur = 1, cMc = 0, cMx = 1;
@@ -1145,68 +1127,72 @@ function cSub() {
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<span>Submitting...</span>';
 
-  // Collect ALL competitor data
-  const data = {
-    type: 'competitor',
-    timestamp: new Date().toISOString(),
-    teamName: document.getElementById('c-tname').value.trim(),
-    teamSize: document.getElementById('c-tsize').value,
-    primaryContact: document.getElementById('c-pcon').value.trim(),
-    primaryEmail: document.getElementById('c-pem').value.trim(),
-    phone: document.getElementById('c-ph').value.trim(),
-    hearAbout: document.getElementById('c-ha').value,
-    schoolName: document.getElementById('c-sn').value.trim(),
-    city: document.getElementById('c-sc').value.trim(),
-    schoolBoard: document.getElementById('c-sb').value.trim(),
-    province: document.querySelector('input[name="cprov"]:checked')?.value || '',
-    teacherAdvisor: document.getElementById('c-ta').value.trim(),
-    advisorEmail: document.getElementById('c-ae').value.trim(),
-    ventureName: document.getElementById('c-vn').value.trim(),
-    tagline: document.getElementById('c-vtl').value.trim(),
-    description: document.getElementById('c-vd').value.trim(),
-    industrySector: document.querySelector('input[name="csec"]:checked')?.id?.slice(3) || '',
-    aiIntegration: document.querySelector('input[name="cait"]:checked')?.id?.slice(4) || '',
-    operatingStatus: document.getElementById('c-os').value,
-    additionalNotes: document.getElementById('c-an').value.trim(),
-    teamMembers: []
-  };
-
-  const teamSize = parseInt(data.teamSize);
+  // Build team members string
+  const teamSize = parseInt(document.getElementById('c-tsize').value) || 1;
+  let membersStr = '';
   for (let i = 1; i <= teamSize; i++) {
-    const f = document.getElementById('cmf' + i)?.value.trim();
-    const l = document.getElementById('cml' + i)?.value.trim();
-    const e = document.getElementById('cme' + i)?.value.trim();
-    const g = document.getElementById('cmg' + i)?.value;
-    const r = document.getElementById('cmr' + i)?.value.trim();
-    if (f && l && e && g) {
-      data.teamMembers.push({ firstName: f, lastName: l, email: e, grade: g, role: r });
+    const f = document.getElementById('cmf' + i)?.value.trim() || '';
+    const l = document.getElementById('cml' + i)?.value.trim() || '';
+    const e = document.getElementById('cme' + i)?.value.trim() || '';
+    const g = document.getElementById('cmg' + i)?.value || '';
+    const r = document.getElementById('cmr' + i)?.value.trim() || 'N/A';
+    if (f && l && e) {
+      membersStr += 'Member ' + i + ': ' + f + ' ' + l + ' | ' + e + ' | ' + g + ' | Role: ' + r + '\n';
     }
   }
 
-  submitBtn.innerHTML = '<span>Sending to Google Sheets...</span>';
+  // Formspree needs flat key-value pairs (no nested objects)
+  const formData = {
+    _subject: 'New Competitor Registration — Founder\'s Den 2026',
+    'Registration Type': 'COMPETITOR',
+    'Team Name': document.getElementById('c-tname').value.trim(),
+    'Team Size': document.getElementById('c-tsize').value,
+    'Primary Contact': document.getElementById('c-pcon').value.trim(),
+    'Email': document.getElementById('c-pem').value.trim(),
+    _replyto: document.getElementById('c-pem').value.trim(),
+    'Phone': document.getElementById('c-ph').value.trim(),
+    'How Did You Hear': document.getElementById('c-ha').value,
+    'School Name': document.getElementById('c-sn').value.trim(),
+    'City': document.getElementById('c-sc').value.trim(),
+    'School Board': document.getElementById('c-sb').value.trim(),
+    'Province': document.querySelector('input[name="cprov"]:checked')?.value || '',
+    'Club Name': document.getElementById('c-ta').value.trim(),
+    'Advisor Email': document.getElementById('c-ae').value.trim(),
+    'Venture Name': document.getElementById('c-vn').value.trim(),
+    'Tagline': document.getElementById('c-vtl').value.trim(),
+    'Venture Description': document.getElementById('c-vd').value.trim(),
+    'Industry Sector': document.querySelector('input[name="csec"]:checked')?.nextElementSibling?.querySelector('.snm')?.textContent || '',
+    'AI Integration': document.querySelector('input[name="cait"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Operating Status': document.getElementById('c-os').value,
+    'Team Members': membersStr,
+    'Additional Notes': document.getElementById('c-an').value.trim()
+  };
 
-  // Use no-cors to avoid Google's redirect chain breaking .json() parsing
-  // Then verify with a GET check
-  fetch(APPS_SCRIPT_URL, {
+  submitBtn.innerHTML = '<span>Sending registration...</span>';
+
+  fetch(FORMSPREE_URL, {
     method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(data)
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
   })
-  .then(() => {
-    // no-cors returns opaque response — we can't read it, but if fetch
-    // didn't throw, the request was sent successfully to Google.
-    // Show success after a brief delay to let Apps Script process.
-    setTimeout(() => {
-      showCompetitorSuccess();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
-    }, 1500);
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    }
+    return response.json().then(data => { throw new Error(data.errors?.map(e => e.message).join(', ') || 'Submission failed'); });
+  })
+  .then(data => {
+    showCompetitorSuccess();
   })
   .catch(error => {
-    console.error('Google Sheets submission error:', error);
-    eb.textContent = 'Submission failed: ' + error.message + '. Please check your internet connection and try again.';
+    console.error('Formspree submission error:', error);
+    eb.textContent = 'Submission failed: ' + error.message + '. Please try again.';
     eb.classList.add('show');
+  })
+  .finally(() => {
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;
   });
@@ -1242,48 +1228,54 @@ function jSub() {
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<span>Submitting...</span>';
 
-  const data = {
-    type: 'judge',
-    timestamp: new Date().toISOString(),
-    firstName: document.getElementById('j-fn').value.trim(),
-    lastName: document.getElementById('j-ln').value.trim(),
-    email: document.getElementById('j-em').value.trim(),
-    phone: document.getElementById('j-ph').value.trim(),
-    location: document.getElementById('j-loc').value.trim(),
-    organization: document.getElementById('j-org').value.trim(),
-    title: document.getElementById('j-title').value.trim(),
-    linkedin: document.getElementById('j-linkedin').value.trim(),
-    industrySector: document.querySelector('input[name="jsec"]:checked')?.id?.slice(3) || '',
-    credentialType: document.querySelector('input[name="jcred"]:checked')?.id?.slice(3) || '',
-    bio: document.getElementById('j-bio').value.trim(),
-    previousExperience: document.getElementById('j-prev').value.trim(),
-    eventAvailability: document.querySelector('input[name="javail"]:checked')?.id || '',
-    briefingAvailability: document.querySelector('input[name="jbrief"]:checked')?.id || '',
-    panelPreference: document.querySelector('input[name="jpref"]:checked')?.id || '',
-    zoomAccess: document.querySelector('input[name="jzoom"]:checked')?.id || '',
-    notes: document.getElementById('j-notes').value.trim()
+  const formData = {
+    _subject: 'New Judge Application — Founder\'s Den 2026',
+    'Registration Type': 'JUDGE',
+    'First Name': document.getElementById('j-fn').value.trim(),
+    'Last Name': document.getElementById('j-ln').value.trim(),
+    'Email': document.getElementById('j-em').value.trim(),
+    _replyto: document.getElementById('j-em').value.trim(),
+    'Phone': document.getElementById('j-ph').value.trim(),
+    'Location': document.getElementById('j-loc').value.trim(),
+    'Organization': document.getElementById('j-org').value.trim(),
+    'Professional Title': document.getElementById('j-title').value.trim(),
+    'LinkedIn': document.getElementById('j-linkedin').value.trim(),
+    'Industry Sector': document.querySelector('input[name="jsec"]:checked')?.nextElementSibling?.querySelector('.snm')?.textContent || '',
+    'Credential Type': document.querySelector('input[name="jcred"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Bio': document.getElementById('j-bio').value.trim(),
+    'Previous Experience': document.getElementById('j-prev').value.trim(),
+    'Event Availability': document.querySelector('input[name="javail"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Briefing Availability': document.querySelector('input[name="jbrief"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Panel Preference': document.querySelector('input[name="jpref"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Zoom Access': document.querySelector('input[name="jzoom"]:checked')?.nextElementSibling?.querySelector('.aitx strong')?.textContent || '',
+    'Notes': document.getElementById('j-notes').value.trim()
   };
 
-  submitBtn.innerHTML = '<span>Sending to Google Sheets...</span>';
+  submitBtn.innerHTML = '<span>Sending application...</span>';
 
-  fetch(APPS_SCRIPT_URL, {
+  fetch(FORMSPREE_URL, {
     method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(data)
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
   })
-  .then(() => {
-    setTimeout(() => {
-      showJudgeSuccess();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
-    }, 1500);
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    }
+    return response.json().then(data => { throw new Error(data.errors?.map(e => e.message).join(', ') || 'Submission failed'); });
+  })
+  .then(data => {
+    showJudgeSuccess();
   })
   .catch(error => {
-    console.error('Google Sheets submission error:', error);
-    const eb = document.getElementById('j-seb');
-    eb.textContent = 'Submission failed: ' + error.message + '. Please check your internet connection and try again.';
+    console.error('Formspree submission error:', error);
+    eb.textContent = 'Submission failed: ' + error.message + '. Please try again.';
     eb.classList.add('show');
+  })
+  .finally(() => {
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;
   });
